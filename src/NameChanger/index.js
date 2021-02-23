@@ -1,27 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { TextInput } from '@instructure/ui-text-input';
-import { Button } from '@instructure/ui-buttons';
-import { View } from '@instructure/ui-view';
-import styles from './styles.css';
-import { API } from '../constants';
+import React, { useState, useEffect } from 'react'
+import { TextInput } from '@instructure/ui-text-input'
+import { Button } from '@instructure/ui-buttons'
+import { View } from '@instructure/ui-view'
+import { getName, postName, deleteName } from './api'
 
 const NameChanger = () => {
   const [name, setName] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch(`${API}/get`);
-        if (res.status === 200) {
-          const json = await res.json();
-          setName(json.name);
-        }
-      } catch (err) {
-        console.warn('err', err);
-      }
-    })();
-  }, []);
+    const fetchName = async () => {
+      setLoading(true)
+      const name = await getName()
+      setName(name)
+      setLoading(false)
+    }
+
+    fetchName()
+  }, [])
   
+  const save = async () => {
+    setLoading(true)
+    let newName = ''
+    if (name === '') {
+      newName = await deleteName(name)
+    } else {
+      newName = await postName(name)
+    }
+    setName(newName)
+    setLoading(false)
+  }
+
   return (
     <View margin="small" display="inline-block">
       <TextInput
@@ -31,9 +40,9 @@ const NameChanger = () => {
         value={name}
         onChange={e => setName(e.target.value)}
       />
-      <Button color="primary" margin="small">Save</Button>
+      <Button disabled={loading} color="primary" margin="small" onClick={save}>Save</Button>
     </View>
-  );
+  )
 }
 
-export default NameChanger;
+export default NameChanger
